@@ -18,12 +18,13 @@ export default function ProtectedRoute({ children, adminOnly = false }) {
 
   if (loading) return null;
 
-  if (!session) return <Navigate to="/login" replace />;
+  // Not logged in → go to club login
+  if (!session) return <Navigate to="../login" replace />;
 
-  // Temporary admin check — will be replaced with profiles.role
+  // Admin check
   if (adminOnly) {
     const isAdmin = session?.user?.email?.endsWith("@chargersrc.com");
-    if (!isAdmin) return <Navigate to="/dashboard" replace />;
+    if (!isAdmin) return <Navigate to="../dashboard" replace />;
   }
 
   return children;

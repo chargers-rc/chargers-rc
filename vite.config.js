@@ -1,37 +1,23 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import { VitePWA } from 'vite-plugin-pwa'
+import { defineConfig } from "vite"
+import react from "@vitejs/plugin-react"
+import UnoCSS from "unocss/vite"
+import path from "path"
 
 export default defineConfig({
+  base: "/",   // ⭐ REQUIRED for multi‑tenant routing
+
   plugins: [
     react(),
-    VitePWA({
-      registerType: 'autoUpdate',
-      injectRegister: 'auto',
-      devOptions: {
-        enabled: true
-      },
-      manifest: {
-        name: 'Chargers RC',
-        short_name: 'ChargersRC',
-        description: 'Chargers RC Club App',
-        theme_color: '#1E90FF',
-        background_color: '#0A0A0A',
-        display: 'standalone',
-        start_url: '/',
-        icons: [
-          {
-            src: '/Driver_Portal_Logo_192x192.png',
-            sizes: '192x192',
-            type: 'image/png'
-          },
-          {
-            src: '/Driver_Portal_Logo_512x512.png',
-            sizes: '512x512',
-            type: 'image/png'
-          }
-        ]
-      }
-    })
-  ]
+    UnoCSS(),
+  ],
+
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "src"),
+      "@app": path.resolve(__dirname, "src/app"),
+      "@components": path.resolve(__dirname, "src/components"),
+      "@context": path.resolve(__dirname, "src/context"),
+      "@utils": path.resolve(__dirname, "src/utils"),
+    },
+  },
 })
