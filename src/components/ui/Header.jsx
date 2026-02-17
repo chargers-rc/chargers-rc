@@ -24,10 +24,12 @@ export default function Header({ club }) {
     ? club.logo_url
     : club?.logo ?? "/chargers-logo.png";
 
+  const homePath = club?.slug ? `/${club.slug}` : "/";
+
   return (
     <header className="w-full bg-white border-b border-border">
       <div className="w-full max-w-6xl mx-auto px-4 h-20 flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-3 no-underline">
+        <Link to={homePath} className="flex items-center gap-3 no-underline">
           <img
             src={logoSrc}
             alt={`${club?.name ?? "Club"} logo`}
@@ -45,7 +47,7 @@ export default function Header({ club }) {
 
         <nav className="hidden md:flex items-center gap-8 font-medium text-brand-secondary">
           <Link
-            to="/"
+            to={homePath}
             className="hover:text-brand-primary transition no-underline text-brand-secondary"
           >
             Home
@@ -106,7 +108,7 @@ export default function Header({ club }) {
         <div className="md:hidden bg-white border-b border-border shadow-sm">
           <div className="px-4 py-3 space-y-2 font-medium text-brand-secondary">
             <Link
-              to="/"
+              to={homePath}
               className="block py-2 hover:text-brand-primary transition no-underline"
               onClick={() => setOpen(false)}
             >
