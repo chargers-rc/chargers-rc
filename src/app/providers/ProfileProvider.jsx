@@ -1,4 +1,6 @@
 // src/app/providers/ProfileProvider.jsx
+console.log("ProfileProvider: render");
+
 import { useEffect, useState } from "react";
 import ProfileContext from "@app/providers/ProfileContext";
 import { supabase } from "@/supabaseClient";

@@ -1,12 +1,14 @@
 // src/app/providers/ClubLayout.jsx
+console.log("ClubLayout: start render");
+
 import { useEffect, useState } from "react";
 import { Outlet, useParams } from "react-router-dom";
 import { supabase } from "@/supabaseClient";
 
-import ThemeProvider from "@/app/providers/ThemeProvider";
 import MembershipProvider from "@/app/providers/MembershipProvider";
 import ProfileProvider from "@/app/providers/ProfileProvider";
 import DriverProvider from "@/app/providers/DriverProvider";
+import NumberProvider from "./NumberProvider";
 
 import Header from "@/components/ui/Header";
 
@@ -20,9 +22,7 @@ export default function ClubLayout() {
   const [user, setUser] = useState(null);
   const [loadingUser, setLoadingUser] = useState(true);
 
-  // ------------------------------------------------------------
   // LOAD CLUB
-  // ------------------------------------------------------------
   useEffect(() => {
     let mounted = true;
 
@@ -44,7 +44,6 @@ export default function ClubLayout() {
         return;
       }
 
-      // TEMP SAFE SANITIZE
       if (data && typeof data.logo_url === "string") {
         const badHosts = ["your-bucket-url", "example.com", "localhost-placeholder"];
         try {
@@ -68,9 +67,7 @@ export default function ClubLayout() {
     };
   }, [clubSlug]);
 
-  // ------------------------------------------------------------
-  // LOAD USER (AUTH)
-  // ------------------------------------------------------------
+  // LOAD USER
   useEffect(() => {
     let mounted = true;
 
@@ -101,9 +98,6 @@ export default function ClubLayout() {
     };
   }, []);
 
-  // ------------------------------------------------------------
-  // BLOCK RENDER UNTIL AUTH + CLUB ARE READY
-  // ------------------------------------------------------------
   if (loadingClub || loadingUser) {
     return <div className="p-6 text-center">Loading user & club…</div>;
   }
@@ -112,19 +106,17 @@ export default function ClubLayout() {
     return <div className="p-6 text-center">Club not found</div>;
   }
 
-  // ------------------------------------------------------------
-  // PROVIDERS + PAGE CONTENT
-  // ------------------------------------------------------------
+  // FIXED: removed nested ThemeProvider
   return (
-    <ThemeProvider>
-      <MembershipProvider user={user}>
-        <ProfileProvider user={user}>
-          <DriverProvider>
+    <MembershipProvider user={user} club={club}>
+      <ProfileProvider user={user}>
+        <DriverProvider>
+          <NumberProvider>
             <Header club={club} user={user} />
             <Outlet context={{ club, user }} />
-          </DriverProvider>
-        </ProfileProvider>
-      </MembershipProvider>
-    </ThemeProvider>
+          </NumberProvider>
+        </DriverProvider>
+      </ProfileProvider>
+    </MembershipProvider>
   );
 }

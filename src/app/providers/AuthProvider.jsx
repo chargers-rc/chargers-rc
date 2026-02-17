@@ -1,3 +1,4 @@
+// src/app/providers/AuthProvider.jsx
 import { createContext, useContext, useEffect, useState } from "react";
 import { supabase } from "@/supabaseClient";
 
@@ -9,7 +10,7 @@ export function useAuth() {
 
 export default function AuthProvider({ children }) {
   const [session, setSession] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loadingUser, setLoadingUser] = useState(true);
 
   useEffect(() => {
     let mounted = true;
@@ -24,7 +25,7 @@ export default function AuthProvider({ children }) {
         if (!mounted) return;
         setSession(null);
       } finally {
-        if (mounted) setLoading(false);
+        if (mounted) setLoadingUser(false);
       }
     };
 
@@ -33,6 +34,8 @@ export default function AuthProvider({ children }) {
     const { data: listener } = supabase.auth.onAuthStateChange((_event, newSession) => {
       if (!mounted) return;
       setSession(newSession ?? null);
+      // Ensure loadingUser becomes false once the listener fires
+      setLoadingUser(false);
     });
 
     return () => {
@@ -48,7 +51,7 @@ export default function AuthProvider({ children }) {
   const value = {
     session,
     user: session?.user ?? null,
-    loading,
+    loadingUser,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
