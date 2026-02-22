@@ -1,7 +1,7 @@
 // src/app/providers/ProfileProvider.jsx
 console.log("ProfileProvider: render");
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import ProfileContext from "@app/providers/ProfileContext";
 import { supabase } from "@/supabaseClient";
 
@@ -93,4 +93,11 @@ export default function ProfileProvider({ children }) {
       {children}
     </ProfileContext.Provider>
   );
+}
+
+/* -------------------------------------------------------
+   Named hook export — required by Header.jsx
+------------------------------------------------------- */
+export function useProfile() {
+  return useContext(ProfileContext);
 }

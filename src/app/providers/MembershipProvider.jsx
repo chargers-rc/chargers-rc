@@ -1,7 +1,7 @@
 // src/app/providers/MembershipProvider.jsx
 console.log("MembershipProvider: render");
 
-import { createContext, useCallback, useEffect, useState } from "react";
+import { createContext, useCallback, useEffect, useState, useContext } from "react";
 import { supabase } from "@/supabaseClient";
 import { useAuth } from "@/app/providers/AuthProvider";
 
@@ -26,13 +26,11 @@ export default function MembershipProvider({ children }) {
   const [loadingMembership, setLoadingMembership] = useState(true);
 
   const loadMembership = useCallback(async () => {
-    // 🚨 Do NOT load membership until user is fully resolved
     if (loadingUser) {
       setLoadingMembership(true);
       return;
     }
 
-    // If user is null (logged out), membership is simply null
     if (!user?.id) {
       setMembership(null);
       setLoadingMembership(false);
@@ -110,4 +108,9 @@ export default function MembershipProvider({ children }) {
       {children}
     </MembershipContext.Provider>
   );
+}
+
+/* ⭐ ADD THIS — the missing hook */
+export function useMembership() {
+  return useContext(MembershipContext);
 }
