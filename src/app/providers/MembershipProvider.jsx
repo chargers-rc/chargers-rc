@@ -49,12 +49,12 @@ export default function MembershipProvider({ children }) {
     setLoadingMembership(true);
 
     try {
+      // ⭐ FIXED: removed .eq("status", "active")
       const { data, error } = await supabase
         .from("household_memberships")
         .select("*")
         .eq("user_id", user.id)
-        .eq("club_id", club.id)        // REQUIRED
-        .eq("status", "active")        // REQUIRED
+        .eq("club_id", club.id)
         .maybeSingle();
 
       if (error) {
@@ -63,13 +63,12 @@ export default function MembershipProvider({ children }) {
       } else {
         const row = data || null;
 
-        // ⭐ ADD: computed membership flag (non-breaking)
+        // ⭐ Clean binary membership model
         const isMember =
           row &&
           row.membership_type &&
           row.membership_type !== "non_member";
 
-        // ⭐ Preserve the row so Driver Manager still works
         setMembership(row ? { ...row, isMember } : null);
       }
     } catch (err) {

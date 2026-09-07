@@ -41,7 +41,7 @@ export default function AdminTopBar() {
         .eq("slug", clubSlug)
         .single();
 
-      const logoUrl = data?.admin_logo_url
+      const logorl = data?.admin_logo_url
         ? `${data.admin_logo_url}?v=${Date.now()}`
         : "https://mvcttnmclrvaatdgzhpb.supabase.co/storage/v1/object/public/club-assets/chargers/DriverPortal_Admin_Logo_512x512.png";
 

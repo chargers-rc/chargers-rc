@@ -112,7 +112,7 @@ export default function EventDetails() {
      NORMALISED VALUES
      =========================== */
 
-  const logo = event.logoUrl || event.logourl || null;
+  const logo = event.logourl || null;
   const track = event.track_type || event.track || "Unknown";
 
   const type = (event.event_type || "racing").toLowerCase();

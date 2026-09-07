@@ -1,19 +1,13 @@
 import CMSInput from "@cms/CMSInput";
+import { cmsLayout } from "@cms/layout";
 
 export default function EventTimingCard({ event, onChange }) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: cmsLayout.spacing.lg }}>
 
       {/* ROW: OPENS + BRIEFING + CLOSES */}
-      <div
-        style={{
-          display: "flex",
-          flexWrap: "wrap",
-          gap: "16px",
-          alignItems: "flex-start",   // ⭐ FIX #1
-        }}
-      >
-        <div style={{ flex: "1 1 200px" }}>
+      <div style={cmsLayout.row}>
+        <div style={cmsLayout.column}>
           <CMSInput
             label="Event Opens At"
             type="datetime-local"
@@ -22,7 +16,7 @@ export default function EventTimingCard({ event, onChange }) {
           />
         </div>
 
-        <div style={{ flex: "1 1 200px" }}>
+        <div style={cmsLayout.column}>
           <CMSInput
             label="Drivers Briefing At"
             type="datetime-local"
@@ -31,7 +25,7 @@ export default function EventTimingCard({ event, onChange }) {
           />
         </div>
 
-        <div style={{ flex: "1 1 200px" }}>
+        <div style={cmsLayout.column}>
           <CMSInput
             label="Event Closes At"
             type="datetime-local"

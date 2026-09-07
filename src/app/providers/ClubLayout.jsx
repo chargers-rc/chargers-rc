@@ -24,19 +24,11 @@ export default function ClubLayout({ children, mode = "drivers" }) {
   }
 
   //
-  // PUBLIC ROUTES
+  // PUBLIC ROUTES — DO NOT REQUIRE CLUB DATA
   //
   if (isPublicRoute) {
-    if (loadingClub || !club) {
-      return (
-        <div className="min-h-screen flex items-center justify-center bg-white">
-          <div>Loading…</div>
-        </div>
-      );
-    }
-
     return (
-      <ThemeProvider mode={mode} clubTheme={club.theme}>
+      <ThemeProvider mode={mode}>
         <div className="w-full flex justify-center overflow-x-visible">
           <div className="w-full max-w-5xl px-4">{children}</div>
         </div>

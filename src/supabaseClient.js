@@ -14,8 +14,11 @@ if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
 }
 
 // Ensure a browser storage adapter when running in the browser.
+// This forces the client to use localStorage for session persistence.
 const browserStorage =
-  typeof window !== "undefined" && window.localStorage ? window.localStorage : undefined;
+  typeof window !== "undefined" && window.localStorage
+    ? window.localStorage
+    : undefined;
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {
@@ -32,6 +35,9 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
 
 // Debug exposure for diagnosis
 if (typeof window !== "undefined") {
+  // ⭐ Restore console access for debugging
+  window.supabase = supabase;
+
   window.__supabase = supabase;
   window.__SUPABASE_DEBUG = {
     url: SUPABASE_URL ? "[present]" : "[missing]",
@@ -39,5 +45,8 @@ if (typeof window !== "undefined") {
     storageProvided: !!browserStorage,
     envDEV: !!import.meta.env.DEV,
   };
+
   console.log(">>> supabaseClient init", window.__SUPABASE_DEBUG);
 }
+
+export default supabase;

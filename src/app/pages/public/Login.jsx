@@ -15,26 +15,12 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
   const [loading, setLoading] = useState(false);
-
   const [checkingExistingSession, setCheckingExistingSession] = useState(true);
 
-  if (!club) {
-    return <div style={{ padding: "24px", textAlign: "center" }}>Loading…</div>;
-  }
-
-  const logoSrc =
-    club?.logoUrl ||
-    club?.logo ||
-    club?.logo_url ||
-    club?.theme?.hero?.logo ||
-    club?.branding?.logo ||
-    club?.assets?.logo ||
-    null;
-
-  /* ------------------------------------------------------------
-     1️⃣ If user is already logged in, check if they belong to this club
-     ------------------------------------------------------------ */
+  // ⭐ ALL HOOKS MUST RUN BEFORE ANY RETURN
   useEffect(() => {
+    if (!club) return; // club not ready yet
+
     async function checkSession() {
       const { data } = await supabase.auth.getUser();
       const existingUser = data?.user;
@@ -49,7 +35,6 @@ export default function Login() {
       if (belongs) {
         navigate(`/${clubSlug}/app/`);
       } else {
-        // User logged in but NOT a member of this club
         setErrorMsg(
           "You are logged in with an account that does not belong to this club. Please log in with a different account."
         );
@@ -61,13 +46,24 @@ export default function Login() {
     checkSession();
   }, [club, clubSlug, navigate]);
 
+  // ⭐ SAFE CONDITIONAL RETURNS (AFTER HOOKS)
+  if (!club) {
+    return <div style={{ padding: "24px", textAlign: "center" }}>Loading…</div>;
+  }
+
   if (checkingExistingSession) {
     return <div style={{ padding: "24px", textAlign: "center" }}>Checking session…</div>;
   }
 
-  /* ------------------------------------------------------------
-     2️⃣ Handle login
-     ------------------------------------------------------------ */
+  const logoSrc =
+    club?.logoUrl ||
+    club?.logo ||
+    club?.logo_url ||
+    club?.theme?.hero?.logo ||
+    club?.branding?.logo ||
+    club?.assets?.logo ||
+    null;
+
   async function handleLogin(e) {
     e.preventDefault();
     setErrorMsg("");
@@ -79,7 +75,6 @@ export default function Login() {
 
     setLoading(true);
 
-    // LOGIN
     const { data: loginData, error } = await supabase.auth.signInWithPassword({
       email: email.trim().toLowerCase(),
       password,
@@ -95,7 +90,6 @@ export default function Login() {
       return;
     }
 
-    // GET USER
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -109,7 +103,6 @@ export default function Login() {
     const userId = user.id;
     const userEmail = user.email?.toLowerCase();
 
-    // CHECK MEMBERSHIP FOR THIS CLUB
     const { data: membership } = await supabase
       .from("household_memberships")
       .select("*")
@@ -118,7 +111,6 @@ export default function Login() {
       .maybeSingle();
 
     if (!membership) {
-      // ❌ DO NOT auto-create membership
       setErrorMsg(
         "This email is not registered with this club. Please contact the club or use a different account."
       );
@@ -126,7 +118,6 @@ export default function Login() {
       return;
     }
 
-    // LINK MEMBERSHIP TO USER IF NEEDED
     if (!membership.user_id) {
       await supabase
         .from("household_memberships")
@@ -137,7 +128,6 @@ export default function Login() {
         .eq("id", membership.id);
     }
 
-    // UPDATE PROFILE WITH MEMBERSHIP ID
     await supabase
       .from("profiles")
       .update({
@@ -146,13 +136,9 @@ export default function Login() {
       })
       .eq("id", userId);
 
-    // SUCCESS → ENTER APP
     navigate(`/${clubSlug}/app/`);
   }
 
-  /* ------------------------------------------------------------
-     3️⃣ UI
-     ------------------------------------------------------------ */
   return (
     <div
       style={{

@@ -7,7 +7,7 @@ export default function CalendarEventCard({
   compact = false,
 }) {
   const [expanded, setExpanded] = useState(false);
-  const hasLogo = event.logoUrl || event.logourl;
+  const hasLogo = event.logourl;
 
   const formatType = (str) => {
     if (!str) return "";
@@ -75,8 +75,7 @@ export default function CalendarEventCard({
         }}
       >
         {hasLogo ? (
-          <img
-            src={event.logoUrl || event.logourl}
+          <img src={event.logourl}
             alt={event.name}
             style={{
               width: "72px",

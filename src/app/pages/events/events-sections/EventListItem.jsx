@@ -5,7 +5,7 @@ import Button from "@/components/ui/Button";
 import { formatDate, TYPE_LABELS, isNominationsOpen } from "./helpers";
 
 export default function EventListItem({ event, brand, clubSlug, isPast }) {
-  const logo = event.logoUrl || event.logourl;
+  const logo = event.logourl;
   const track = event.track_type || event.track;
   const type = (event.event_type || "racing").toLowerCase();
   const typeLabel = TYPE_LABELS[type];

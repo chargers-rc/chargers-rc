@@ -1,40 +1,64 @@
 import CMSInput from "@cms/CMSInput";
+import CMSSelect from "@cms/CMSSelect";
 import CMSButton from "@cms/CMSButton";
-import SortableClassItem from "./SortableClassItem";
+import { cmsLayout } from "@cms/layout";
 
 export default function EventNominationsCard({
   event,
   onChange,
   onClassesChange,
 }) {
-  const addClass = () => {
-    const updated = [...event.classes, ""];
-    onClassesChange(updated);
+  const availableClasses = event.available_classes || [];
+  const isMulti = !!event.is_multi_day;
+
+  // Days now objects: { date, label }
+  const days = Array.isArray(event.days)
+    ? event.days.map((d) =>
+        typeof d === "string" ? { date: d, label: "" } : d
+      )
+    : [];
+
+  // IMMUTABLE NORMALIZATION — FIXES PHANTOM DAY BUG
+  const rawClassesByDay = event.classes_by_day || {};
+  const classesByDay = { ...rawClassesByDay };
+
+  days.forEach((dayObj) => {
+    const key = dayObj.date;
+    if (!Array.isArray(classesByDay[key])) {
+      classesByDay[key] = [];
+    }
+  });
+
+  const updateDayClasses = (dayKey, newList) => {
+    onClassesChange({
+      ...classesByDay,
+      [dayKey]: newList,
+    });
   };
 
-  const updateClass = (index, value) => {
-    const updated = [...event.classes];
-    updated[index] = value;
-    onClassesChange(updated);
+  const addClassToDay = (dayKey) => {
+    updateDayClasses(dayKey, [...classesByDay[dayKey], ""]);
   };
 
-  const removeClass = (index) => {
-    const updated = event.classes.filter((_, i) => i !== index);
-    onClassesChange(updated);
+  const updateClassInDay = (dayKey, index, value) => {
+    const next = [...classesByDay[dayKey]];
+    next[index] = value;
+    updateDayClasses(dayKey, next);
+  };
+
+  const removeClassFromDay = (dayKey, index) => {
+    updateDayClasses(
+      dayKey,
+      classesByDay[dayKey].filter((_, i) => i !== index)
+    );
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-      
-      {/* NOMINATIONS OPEN + CLOSE */}
-      <div
-        style={{
-          display: "flex",
-          flexWrap: "wrap",
-          gap: "16px",
-        }}
-      >
-        <div style={{ flex: "1 1 200px" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: cmsLayout.spacing.lg }}>
+
+      {/* NOMINATIONS OPEN / CLOSE */}
+      <div style={cmsLayout.row}>
+        <div style={cmsLayout.column}>
           <CMSInput
             label="Nominations Open"
             type="datetime-local"
@@ -43,7 +67,7 @@ export default function EventNominationsCard({
           />
         </div>
 
-        <div style={{ flex: "1 1 200px" }}>
+        <div style={cmsLayout.column}>
           <CMSInput
             label="Nominations Close"
             type="datetime-local"
@@ -53,38 +77,111 @@ export default function EventNominationsCard({
         </div>
       </div>
 
-      {/* CLASSES LIST */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-        <label
-          style={{
-            fontSize: "13px",
-            fontWeight: 500,
-          }}
-        >
-          Classes
-        </label>
+      {/* MULTI-DAY CLASS ASSIGNMENT */}
+      {isMulti ? (
+        <div style={{ display: "flex", flexDirection: "column", gap: cmsLayout.spacing.lg }}>
+          {days.map((dayObj) => {
+            const dayKey = dayObj.date;
+            const dayLabel = dayObj.label || dayObj.date;
 
-        {event.classes.map((cls, index) => (
-          <SortableClassItem
-            key={index}
-            value={cls}
-            onChange={(v) => updateClass(index, v)}
-            onRemove={() => removeClass(index)}
-          />
-        ))}
+            return (
+              <div
+                key={dayKey}
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: cmsLayout.spacing.md,
+                  padding: "12px",
+                  border: "1px solid #E5E7EB",
+                  borderRadius: "8px",
+                  background: "#FAFAFA",
+                }}
+              >
+                <div style={{ fontWeight: 600 }}>{dayLabel}</div>
 
-        <CMSButton variant="secondary" onClick={addClass}>
-          + Add Class
-        </CMSButton>
-      </div>
+                {classesByDay[dayKey].map((cls, index) => (
+                  <div key={index} style={cmsLayout.row}>
+                    <div style={cmsLayout.column}>
+                      <CMSSelect
+                        label={`Class ${index + 1}`}
+                        value={cls}
+                        onChange={(value) =>
+                          updateClassInDay(dayKey, index, value)
+                        }
+                        options={availableClasses.map((c) => ({
+                          label: c.name,
+                          value: c.id,
+                        }))}
+                        placeholder="Select class..."
+                      />
+                    </div>
 
-      {/* CLASS LIMIT */}
-      <CMSInput
-        label="Class Limit"
-        type="number"
-        value={event.class_limit}
-        onChange={(v) => onChange("class_limit", v)}
-      />
+                    <CMSButton
+                      variant="danger"
+                      onClick={() => removeClassFromDay(dayKey, index)}
+                    >
+                      Remove
+                    </CMSButton>
+                  </div>
+                ))}
+
+                <CMSButton
+                  variant="secondary"
+                  onClick={() => addClassToDay(dayKey)}
+                >
+                  + Add Class to {dayLabel}
+                </CMSButton>
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: cmsLayout.spacing.md }}>
+          <label style={cmsLayout.label}>Classes</label>
+
+          {(event.classes || []).map((cls, index) => (
+            <div key={index} style={cmsLayout.row}>
+              <div style={cmsLayout.column}>
+                <CMSSelect
+                  label={`Class ${index + 1}`}
+                  value={cls}
+                  onChange={(value) => {
+                    const next = [...(event.classes || [])];
+                    next[index] = value;
+                    onChange("classes", next);
+                  }}
+                  options={availableClasses.map((c) => ({
+                    label: c.name,
+                    value: c.id,
+                  }))}
+                  placeholder="Select class..."
+                />
+              </div>
+
+              <CMSButton
+                variant="danger"
+                onClick={() =>
+                  onChange(
+                    "classes",
+                    (event.classes || []).filter((_, i) => i !== index)
+                  )
+                }
+              >
+                Remove
+              </CMSButton>
+            </div>
+          ))}
+
+          <CMSButton
+            variant="secondary"
+            onClick={() =>
+              onChange("classes", [...(event.classes || []), ""])
+            }
+          >
+            + Add Class
+          </CMSButton>
+        </div>
+      )}
     </div>
   );
 }

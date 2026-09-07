@@ -17,7 +17,12 @@ export default function CMSToggle({ label, checked, onChange }) {
     >
       <span>{label}</span>
 
-      <div
+      {/* IMPORTANT FIX:
+         Use a button instead of a div so React does NOT swallow the click.
+         This guarantees onChange fires every time.
+      */}
+      <button
+        type="button"
         onClick={() => onChange(!checked)}
         style={{
           width: "42px",
@@ -26,6 +31,9 @@ export default function CMSToggle({ label, checked, onChange }) {
           backgroundColor: checked ? "#16A34A" : "#D1D5DB",
           position: "relative",
           transition: "background-color 0.2s ease",
+          border: "none",
+          padding: 0,
+          cursor: "pointer",
         }}
       >
         <div
@@ -41,7 +49,7 @@ export default function CMSToggle({ label, checked, onChange }) {
             boxShadow: "0 1px 2px rgba(0,0,0,0.2)",
           }}
         />
-      </div>
+      </button>
     </label>
   );
 }

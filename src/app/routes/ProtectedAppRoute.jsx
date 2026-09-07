@@ -2,49 +2,14 @@
 import { Navigate, useParams } from "react-router-dom";
 import { useAuth } from "@/app/providers/AuthProvider";
 import { useClub } from "@/app/providers/ClubProvider";
-import { userBelongsToClub } from "@/app/providers/ClubProvider";
-import { useEffect, useState } from "react";
 
 export default function ProtectedAppRoute({ children }) {
-  const { user, loadingUser } = useAuth();
+  const { session, membership, loadingUser } = useAuth();
   const { club, loadingClub } = useClub();
   const { clubSlug } = useParams();
 
-  const [allowed, setAllowed] = useState(null);
-
-  useEffect(() => {
-    async function checkAccess() {
-      // Still loading user or club → wait
-      if (loadingUser || loadingClub) return;
-
-      // No user → not allowed
-      if (!user) {
-        setAllowed(false);
-        return;
-      }
-
-      // Platform admin override
-      const isPlatformAdmin =
-        user?.user_metadata?.role === "platform_admin" ||
-        user?.user_metadata?.roles?.includes("platform_admin") ||
-        user?.user_metadata?.is_platform_admin === true;
-
-      if (isPlatformAdmin) {
-        setAllowed(true);
-        return;
-      }
-
-      // Must belong to this club
-      const belongs = await userBelongsToClub(user.id, club.id);
-
-      setAllowed(belongs);
-    }
-
-    checkAccess();
-  }, [user, club, loadingUser, loadingClub]);
-
-  // Still checking
-  if (allowed === null) {
+  // Still loading → block until ready
+  if (loadingUser || loadingClub) {
     return (
       <div style={{ padding: "24px", textAlign: "center" }}>
         Checking access…
@@ -52,11 +17,26 @@ export default function ProtectedAppRoute({ children }) {
     );
   }
 
-  // Not allowed → redirect to login
-  if (!allowed) {
+  // 1. Must have a Supabase session
+  if (!session?.user) {
     return <Navigate to={`/${clubSlug}/public/login`} replace />;
   }
 
-  // Allowed → render app
+  // 2. Must have a membership row
+  if (!membership) {
+    return <Navigate to={`/${clubSlug}/public/login`} replace />;
+  }
+
+  // 3. Membership must belong to this club
+  if (membership.club_id !== club.id) {
+    return <Navigate to={`/${clubSlug}/public/login`} replace />;
+  }
+
+  // 4. Membership must be active
+  if (membership.status !== "active") {
+    return <Navigate to={`/${clubSlug}/public/login`} replace />;
+  }
+
+  // All checks passed → allow access
   return children;
 }

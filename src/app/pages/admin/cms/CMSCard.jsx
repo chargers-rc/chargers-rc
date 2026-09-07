@@ -4,15 +4,15 @@ export default function CMSCard({ title, actions, children }) {
   return (
     <div
       style={{
-        width: "100%",                 // ⭐ full width
+        width: "100%",
         background: "#FFFFFF",
         border: "1px solid #E5E7EB",
         borderRadius: "6px",
-        padding: "20px",
+        padding: "16px",              // ⭐ tighter padding
         boxSizing: "border-box",
         display: "flex",
         flexDirection: "column",
-        gap: "20px",
+        gap: "12px",                  // ⭐ tighter gap
       }}
     >
       {(title || actions) && (
@@ -36,7 +36,13 @@ export default function CMSCard({ title, actions, children }) {
         </div>
       )}
 
-      <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: "8px",                 // ⭐ tighter field spacing
+        }}
+      >
         {children}
       </div>
     </div>

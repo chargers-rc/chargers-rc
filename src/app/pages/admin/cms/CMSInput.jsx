@@ -12,26 +12,35 @@ export default function CMSInput({
 }) {
   const baseInputStyle = {
     ...cmsStyles.input,
-    borderColor: "#D1D5DB", // normal grey border
+    borderColor: "#D1D5DD",
     outline: "none",
   };
 
   const baseTextareaStyle = {
     ...cmsStyles.textarea,
-    borderColor: "#D1D5DB",
+    borderColor: "#D1D5DD",
     outline: "none",
   };
 
+  // ⭐ FIX: Always convert events → raw values
+  const handleValue = (eOrValue) => {
+    const v =
+      typeof eOrValue === "string"
+        ? eOrValue
+        : eOrValue?.target?.value ?? "";
+
+    onChange(v);
+  };
+
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
       {label && <label style={cmsStyles.label}>{label}</label>}
 
-      {/* SELECT */}
       {options ? (
         <select
           name={name}
-          value={value}
-          onChange={onChange}
+          value={value || ""}
+          onChange={handleValue}
           style={{
             ...baseInputStyle,
             appearance: "none",
@@ -48,7 +57,7 @@ export default function CMSInput({
             e.target.style.boxShadow = `0 0 0 2px ${ADMIN_RED}33`;
           }}
           onBlur={(e) => {
-            e.target.style.borderColor = "#D1D5DB";
+            e.target.style.borderColor = "#D1D5DD";
             e.target.style.boxShadow = "none";
           }}
         >
@@ -61,15 +70,15 @@ export default function CMSInput({
       ) : type === "textarea" ? (
         <textarea
           name={name}
-          value={value}
-          onChange={onChange}
+          value={value || ""}
+          onChange={handleValue}
           style={baseTextareaStyle}
           onFocus={(e) => {
             e.target.style.borderColor = ADMIN_RED;
             e.target.style.boxShadow = `0 0 0 2px ${ADMIN_RED}33`;
           }}
           onBlur={(e) => {
-            e.target.style.borderColor = "#D1D5DB";
+            e.target.style.borderColor = "#D1D5DD";
             e.target.style.boxShadow = "none";
           }}
         />
@@ -77,15 +86,15 @@ export default function CMSInput({
         <input
           name={name}
           type={type}
-          value={value}
-          onChange={onChange}
+          value={value || ""}
+          onChange={handleValue}
           style={baseInputStyle}
           onFocus={(e) => {
             e.target.style.borderColor = ADMIN_RED;
             e.target.style.boxShadow = `0 0 0 2px ${ADMIN_RED}33`;
           }}
           onBlur={(e) => {
-            e.target.style.borderColor = "#D1D5DB";
+            e.target.style.borderColor = "#D1D5DD";
             e.target.style.boxShadow = "none";
           }}
         />

@@ -114,28 +114,31 @@ export default function Signup() {
   }
 
   // ------------------------------------------------------------
-  // STEP 2 — Member Lookup
+  // STEP 2 — Member Lookup (EMAIL ONLY — correct schema)
   // ------------------------------------------------------------
   async function handleLookupMembership(e) {
     e.preventDefault();
     setErrorMsg("");
 
     if (!isValidEmail(membershipEmail.trim())) {
-      return setErrorMsg("Please enter a valid email address.");
+      return setErrorMsg("Please enter the email you gave the club.");
     }
 
     setLoading(true);
 
+    const cleanEmail = membershipEmail.trim().toLowerCase();
+
     const { data, error } = await supabase
       .from("household_memberships")
       .select("*")
-      .ilike("email", membershipEmail.trim())
       .eq("club_id", clubId)
+      .ilike("email", cleanEmail)
       .maybeSingle();
 
     setLoading(false);
 
     if (error) {
+      console.error("Lookup error:", error);
       return setErrorMsg("Something went wrong. Please try again.");
     }
 
@@ -149,10 +152,13 @@ export default function Signup() {
     setName(
       `${data.primary_first_name || ""} ${data.primary_last_name || ""}`.trim()
     );
-    setEmail(membershipEmail.trim().toLowerCase());
+    setEmail(cleanEmail);
     setStep("memberCreatePassword");
   }
 
+  // ------------------------------------------------------------
+  // RENDER STEP 2 — Member Lookup
+  // ------------------------------------------------------------
   function renderMemberLookup() {
     return (
       <div
@@ -218,7 +224,11 @@ export default function Signup() {
             {loading ? "Searching…" : "Find Membership"}
           </Button>
 
-          <Button variant="secondary" size="lg" onClick={() => setStep("memberQuestion")}>
+          <Button
+            variant="secondary"
+            size="lg"
+            onClick={() => setStep("memberQuestion")}
+          >
             Back
           </Button>
         </form>
@@ -263,6 +273,9 @@ export default function Signup() {
             club_id: clubId,
             club_name: club?.name,
             club_logo_url: club?.logo_url,
+            signup_type: membership?.id
+              ? "member_signup"
+              : "non_member_signup",
             ...(membership?.id ? { membership_id: membership.id } : {}),
           },
         }),
@@ -276,24 +289,8 @@ export default function Signup() {
       return setErrorMsg(result.error || "Signup failed");
     }
 
-    const user = result.user;
-
-    if (user) {
-      await supabase
-        .from("household_memberships")
-        .update({
-          user_id: user.id,
-          primary_first_name: firstName,
-          primary_last_name: lastName,
-          status: "active",
-        })
-        .eq("id", membership.id);
-    }
-
-    // ⭐ ALWAYS SIGN OUT
     await supabase.auth.signOut();
 
-    // ⭐ 500ms delay before showing success screen
     setTimeout(() => {
       setStep("signupSuccess");
     }, 500);
@@ -386,65 +383,92 @@ export default function Signup() {
   }
 
   // ------------------------------------------------------------
-  // STEP 4 — Non-member Signup (AUTH-AWARE)
+  // STEP 4 — Non-member Signup (Edge Function)
   // ------------------------------------------------------------
 async function handleNonMemberSignup(e) {
   e.preventDefault();
   setErrorMsg("");
 
-  if (!name.trim()) return setErrorMsg("Please enter your full name.");
-  if (!isValidEmail(email.trim())) return setErrorMsg("Please enter a valid email address.");
-  if (password.length < 6) return setErrorMsg("Password must be at least 6 characters.");
-  if (password !== confirmPassword) return setErrorMsg("Passwords do not match.");
+  if (!name.trim()) {
+    return setErrorMsg("Please enter your full name.");
+  }
+  if (!isValidEmail(email.trim())) {
+    return setErrorMsg("Please enter a valid email address.");
+  }
+  if (!password || password.length < 6) {
+    return setErrorMsg("Password must be at least 6 characters.");
+  }
+  if (password !== confirmPassword) {
+    return setErrorMsg("Passwords do not match.");
+  }
+  if (!clubId) {
+    return setErrorMsg("Club not loaded. Please refresh and try again.");
+  }
 
   setLoading(true);
 
   const cleanEmail = email.trim().toLowerCase();
-
   const parts = name.trim().split(/\s+/);
   const firstName = parts[0];
   const lastName = parts.length > 1 ? parts.slice(1).join(" ") : firstName;
 
-  // ⭐ Non-member → use normal signUp so Supabase sends confirmation email
-  const { data: signUpData, error } = await supabase.auth.signUp({
-    email: cleanEmail,
-    password,
-    options: {
-      emailRedirectTo: `${window.location.origin}/${clubSlug}/public/login`,
-      data: {
-        full_name: name.trim(),
-        first_name: firstName,
-        last_name: lastName,
-        club_id: clubId,
-        club_name: club.name,
-        club_logo_url: club.logo_url,
-      },
-    },
-  });
+  // Block: this email already belongs to a membership at this club
+  const { data: existingMembership } = await supabase
+    .from("household_memberships")
+    .select("id, status")
+    .eq("club_id", clubId)
+    .ilike("email", cleanEmail)
+    .maybeSingle();
 
-  if (error) {
+  if (existingMembership) {
     setLoading(false);
-    return setErrorMsg(error.message);
+    return setErrorMsg(
+      "This email is already associated with a membership at this club. Please use the 'I am a member' option and the email you gave the club."
+    );
   }
 
-  // ⭐ Insert membership row (user is not logged in yet)
-  if (signUpData?.user) {
-    await supabase.from("household_memberships").insert({
-      user_id: signUpData.user.id,
+  try {
+    // ✅ This is the path that sends emails (like before)
+    const { data: signUpData, error } = await supabase.auth.signUp({
       email: cleanEmail,
-      primary_first_name: firstName,
-      primary_last_name: lastName,
-      status: "pending", // ⭐ stays pending until email confirmed
-      membership_type: "non_member",
-      club_id: clubId,
+      password,
+      options: {
+        emailRedirectTo: `${window.location.origin}/${clubSlug}/public/login`,
+        data: {
+          full_name: name.trim(),
+          first_name: firstName,
+          last_name: lastName,
+          club_id: clubId,
+        },
+      },
     });
+
+    if (error) throw error;
+
+    // Optional: create a non-member row immediately
+    if (signUpData.user) {
+      await supabase.from("household_memberships").insert({
+        user_id: signUpData.user.id,
+        email: cleanEmail,
+        primary_first_name: firstName,
+        primary_last_name: lastName,
+        membership_type: "non_member",
+        status: "pending",
+        club_id: clubId,
+      });
+    }
+
+    navigate(
+      `/${clubSlug}/public/check-email?email=${encodeURIComponent(cleanEmail)}`
+    );
+  } catch (err) {
+    console.error("Non-member signup error", err);
+    setErrorMsg(err.message || "Failed to create account.");
+  } finally {
+    setLoading(false);
   }
-
-  // ⭐ Redirect to check-email page (confirmation email WAS sent)
-  navigate(`/${clubSlug}/public/check-email?email=${encodeURIComponent(cleanEmail)}`);
-
-  setLoading(false);
 }
+
   function renderNonMemberSignup() {
     return (
       <div

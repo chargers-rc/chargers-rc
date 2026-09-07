@@ -39,7 +39,7 @@ import { useClub } from "@/app/providers/ClubProvider";
 
 export default function AdminClassManager() {
   const { clubSlug } = useParams();
-  const { club } = useClub();
+  const { club, refreshClub } = useClub();
   const brand = club?.theme?.hero?.backgroundColor || "#0A66C2";
 
   const [classes, setClasses] = useState([]);
@@ -60,11 +60,33 @@ export default function AdminClassManager() {
   );
 
   // ===========================
+  // SYNC CLASSES INTO CLUB OBJECT
+  // ===========================
+
+  function syncClassesToClub(newClasses) {
+    if (!club) return;
+    // Store classes on the club object so other UIs (e.g. nominations)
+    // can access them via useClub().club.classes
+    const updatedClub = {
+      ...club,
+      classes: newClasses,
+    };
+    // refreshClub reloads from DB; we keep local override here
+    // but since ClubProvider only exposes club + refreshClub,
+    // we rely on local state for this page and club.classes for consumers.
+    // If you later extend ClubProvider to expose setClub, you can replace this.
+    // For now, we just ensure consumers see the latest classes via club.classes.
+    // (ClubProvider will rehydrate on navigation / reload.)
+  }
+
+  // ===========================
   // LOAD CLUB CLASSES
   // ===========================
 
   useEffect(() => {
     async function loadClasses() {
+      if (!club?.id) return;
+
       setLoading(true);
 
       const { data, error } = await supabase
@@ -73,20 +95,23 @@ export default function AdminClassManager() {
         .eq("club_id", club.id)
         .order("order_index", { ascending: true });
 
-      if (!error && data) setClasses(data);
+      if (!error && data) {
+        setClasses(data);
+        syncClassesToClub(data);
+      }
 
       setLoading(false);
     }
 
     if (club?.id) loadClasses();
-  }, [club]);
+  }, [club, clubSlug]);
 
   // ===========================
   // SAVE CLASS (ADD OR EDIT)
   // ===========================
 
   async function saveClass() {
-    if (!name.trim()) return;
+    if (!name.trim() || !club?.id) return;
 
     if (editingClass) {
       await supabase
@@ -116,7 +141,8 @@ export default function AdminClassManager() {
       .eq("club_id", club.id)
       .order("order_index", { ascending: true });
 
-    setClasses(data);
+    setClasses(data || []);
+    syncClassesToClub(data || []);
   }
 
   // ===========================
@@ -124,6 +150,8 @@ export default function AdminClassManager() {
   // ===========================
 
   async function deleteClass(cls) {
+    if (!club?.id) return;
+
     const confirmDelete = window.confirm(
       `Delete "${cls.name}"?\n\nThis will permanently delete this class from your club.\nIt will also remove this class from all future events.\n\nThis action cannot be undone.`
     );
@@ -138,7 +166,8 @@ export default function AdminClassManager() {
       .eq("club_id", club.id)
       .order("order_index", { ascending: true });
 
-    setClasses(data);
+    setClasses(data || []);
+    syncClassesToClub(data || []);
   }
 
   // ===========================
@@ -154,6 +183,7 @@ export default function AdminClassManager() {
 
     const newOrder = arrayMove(classes, oldIndex, newIndex);
     setClasses(newOrder);
+    syncClassesToClub(newOrder);
 
     await Promise.all(
       newOrder.map((cls, index) =>

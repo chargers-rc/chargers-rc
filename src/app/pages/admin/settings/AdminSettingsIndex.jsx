@@ -12,7 +12,7 @@ export default function AdminSettingsIndex() {
     { path: "membership", title: "Membership", desc: "Plans, pricing, and renewals" },
     { path: "event-defaults", title: "Event Defaults", desc: "Default event configuration" },
     { path: "driver", title: "Driver Settings", desc: "Driver rules and configuration" },
-    { path: "tracks-classes", title: "Tracks & Classes", desc: "Track layouts and race classes" },
+    { path: "tracks-and-classes", title: "Tracks & Classes", desc: "Track layouts and race classes" },
   ];
 
   return (

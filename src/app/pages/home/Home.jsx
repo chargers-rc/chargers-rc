@@ -161,9 +161,8 @@ export default function Home() {
                 className="space-y-3 text-center bg-white rounded-lg hover:opacity-90 transition"
                 style={{ border: `2px solid ${brand}` }}
               >
-                {nextEvent.logoUrl && (
-                  <img
-                    src={nextEvent.logoUrl}
+                {nextEvent.logourl && (
+  <img src={nextEvent.logourl}
                     alt={`${nextEvent.name} logo`}
                     className="mx-auto max-w-full h-auto"
                     style={{ objectFit: "contain", width: "120px" }}

@@ -1,5 +1,5 @@
-import CMSCard from "@cms/CMSCard";
 import CMSButton from "@cms/CMSButton";
+import { cmsLayout } from "@cms/layout";
 
 export default function SaveActions({
   isNew,
@@ -12,38 +12,27 @@ export default function SaveActions({
     <div
       style={{
         display: "flex",
-        flexWrap: "wrap",
-        gap: "12px",
-        justifyContent: "flex-end",
+        justifyContent: "space-between",
+        gap: cmsLayout.spacing.md,
+        marginTop: cmsLayout.spacing.lg,
       }}
     >
-      {!isNew && (
-        <CMSButton
-          variant="danger"
-          onClick={onDelete}
-          disabled={saving}
-        >
-          Delete Event
+      <div style={{ display: "flex", gap: cmsLayout.spacing.sm }}>
+        {!isNew && (
+          <CMSButton variant="danger" onClick={onDelete} disabled={saving}>
+            Delete Event
+          </CMSButton>
+        )}
+      </div>
+
+      <div style={{ display: "flex", gap: cmsLayout.spacing.sm }}>
+        <CMSButton variant="secondary" onClick={onCancel} disabled={saving}>
+          Cancel
         </CMSButton>
-      )}
-
-      <div style={{ flex: "1 1 auto" }} />
-
-      <CMSButton
-        variant="secondary"
-        onClick={onCancel}
-        disabled={saving}
-      >
-        Cancel
-      </CMSButton>
-
-      <CMSButton
-        variant="primary"
-        onClick={onSave}
-        disabled={saving}
-      >
-        {saving ? "Saving…" : "Save Event"}
-      </CMSButton>
+        <CMSButton variant="primary" onClick={onSave} disabled={saving}>
+          {saving ? "Saving…" : "Save Event"}
+        </CMSButton>
+      </div>
     </div>
   );
 }

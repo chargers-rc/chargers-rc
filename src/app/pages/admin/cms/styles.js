@@ -1,26 +1,30 @@
 export const cmsStyles = {
   // -----------------------------
-  // CARD (FIXED + UNIFIED)
+  // CARD (TIGHT + CLEAN)
   // -----------------------------
   card: {
-    width: "100%",                 // ⭐ FULL WIDTH — stops shrink-to-fit
+    width: "100%",
     backgroundColor: "#FFFFFF",
     border: "1px solid #E5E7EB",
     borderRadius: "8px",
-    padding: "20px",               // ⭐ MATCHES ADMIN LAYOUT
-    boxSizing: "border-box",       // ⭐ CRITICAL FOR WIDTH CONSISTENCY
+
+    // ⭐ TIGHTER PADDING
+    padding: "12px",
+    boxSizing: "border-box",
+
     display: "flex",
     flexDirection: "column",
-    gap: "20px",
+
+    // ⭐ NO INTERNAL GAP
+    gap: "0px",
   },
 
   cardHeader: {
-    padding: "0 0 4px 0",          // Header spacing now handled by card padding
+    paddingBottom: "8px", // tighter
     borderBottom: "1px solid #E5E7EB",
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingBottom: "12px",
   },
 
   cardTitle: {
@@ -30,11 +34,11 @@ export const cmsStyles = {
   },
 
   cardBody: {
-    padding: "0",                  // Body spacing handled by card gap
+    padding: "0",
   },
 
   // -----------------------------
-  // BUTTONS (GREY)
+  // BUTTONS
   // -----------------------------
   buttonBase: {
     padding: "10px 16px",
@@ -65,18 +69,23 @@ export const cmsStyles = {
   },
 
   // -----------------------------
-  // FORM ELEMENTS
+  // FORM ELEMENTS (TIGHT)
   // -----------------------------
   label: {
     fontSize: "14px",
     fontWeight: 600,
     color: "#374151",
-    marginBottom: "4px",
+
+    // ⭐ TIGHTER LABEL SPACING
+    marginBottom: "2px",
   },
 
   input: {
     width: "100%",
-    padding: "10px 12px",
+
+    // ⭐ TIGHTER INPUT PADDING
+    padding: "8px 10px",
+
     borderRadius: "6px",
     border: "1px solid #D1D5DB",
     fontSize: "14px",
@@ -86,34 +95,45 @@ export const cmsStyles = {
 
   textarea: {
     width: "100%",
-    padding: "10px 12px",
+
+    // ⭐ TIGHTER TEXTAREA PADDING
+    padding: "8px 10px",
+
     borderRadius: "6px",
     border: "1px solid #D1D5DB",
     fontSize: "14px",
     color: "#111827",
-    minHeight: "120px",
+
+    // ⭐ TIGHTER HEIGHT
+    minHeight: "100px",
+
     boxSizing: "border-box",
   },
 
   // -----------------------------
-  // SECTION HEADERS
+  // SECTION HEADERS (TIGHT)
   // -----------------------------
   sectionHeader: {
     fontSize: "12px",
     fontWeight: 600,
     color: "#111827",
-    marginBottom: "8px",
-    marginTop: "12px",
+
+    // ⭐ TIGHTER SPACING
+    marginBottom: "6px",
+    marginTop: "10px",
   },
 
   // -----------------------------
-  // FORM ROWS
+  // FORM ROWS (TIGHT)
   // -----------------------------
   formRow: {
     display: "flex",
     flexDirection: "column",
-    gap: "6px",
-    marginBottom: "16px",
+
+    // ⭐ TIGHTER GAP
+    gap: "4px",
+
+    marginBottom: "8px",
   },
 
   // -----------------------------
@@ -138,7 +158,7 @@ export const cmsStyles = {
   },
 
   // -----------------------------
-  // EVENT CARD TEXT (EDITABLE)
+  // EVENT CARD TEXT
   // -----------------------------
   eventCardText: {
     labelSize: "14px",
@@ -147,7 +167,7 @@ export const cmsStyles = {
   },
 
   // -----------------------------
-  // TABLE (LEGACY SUPPORT)
+  // TABLE (LEGACY)
   // -----------------------------
   table: {
     th: {
@@ -210,5 +230,5 @@ export const cmsStyles = {
   },
 };
 
-// Backwards compatibility for old imports
+// Backwards compatibility
 export const styles = cmsStyles.table;

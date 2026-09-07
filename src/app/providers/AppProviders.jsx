@@ -13,23 +13,32 @@ import NotificationProvider from "@/app/providers/NotificationProvider";
 function InnerAppProviders({ children }) {
   const { user, loadingUser } = useAuth();
 
-  console.log("[InnerAppProviders]", { user });
+  console.log("[InnerAppProviders]", { user, loadingUser });
 
-  if (loadingUser) return null;
+  // Allow rendering while loadingUser === true
+  if (loadingUser) {
+    return <div style={{ padding: 40, fontSize: 24 }}>Loading user…</div>;
+  }
 
+  // ⭐ ALWAYS mount ClubProvider — public routes REQUIRE club
   return (
     <ClubProvider>
-      <MembershipProvider>
+      {/* Profile + membership only when user exists */}
+      {user ? (
         <ProfileProvider>
-          <DriverProvider>
-            <NumberProvider>
-              <NotificationProvider>
-                {children}
-              </NotificationProvider>
-            </NumberProvider>
-          </DriverProvider>
+          <MembershipProvider>
+            <DriverProvider>
+              <NumberProvider>
+                <NotificationProvider>
+                  {children}
+                </NotificationProvider>
+              </NumberProvider>
+            </DriverProvider>
+          </MembershipProvider>
         </ProfileProvider>
-      </MembershipProvider>
+      ) : (
+        children
+      )}
     </ClubProvider>
   );
 }

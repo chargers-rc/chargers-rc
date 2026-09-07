@@ -36,7 +36,7 @@ function exportEventsCSV(events, nominationClassesByEventId) {
       Date: e.event_date || "",
       Track: e.track || "",
       EnabledClasses: enabled,
-      HasLogo: e.logoUrl ? "Yes" : "No",
+      HasLogo: e.logourl ? "Yes" : "No",
       NominationWindow:
         e.nominations_open && e.nominations_close ? "Set" : "Missing",
     };

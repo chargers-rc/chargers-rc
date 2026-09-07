@@ -1,21 +1,35 @@
-import React, { useRef } from "react";
-import CMSButton from "./CMSButton";
+import React, { useRef, useEffect, useState } from "react";
+import { UploadButton, DeleteButton } from "@cms/CMSButtonSet";
 import { cmsStyles } from "./styles";
 
-export default function CMSImageUpload({ label, value, onChange }) {
+export default function CMSImageUpload({ label, value, filePreview, onChange }) {
   const fileInputRef = useRef(null);
+  const [objectUrl, setObjectUrl] = useState(null);
+
+  // ⭐ Create object URL only when filePreview changes
+  useEffect(() => {
+    if (filePreview instanceof File) {
+      const url = URL.createObjectURL(filePreview);
+      setObjectUrl(url);
+
+      return () => URL.revokeObjectURL(url);
+    }
+
+    setObjectUrl(null);
+  }, [filePreview]);
 
   const handleFileSelect = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
-    // Pass the file back to the parent (upload handled outside)
     onChange(file);
   };
 
   const handleRemove = () => {
     onChange(null);
   };
+
+  // ⭐ Determine preview source
+  const previewSrc = objectUrl || (typeof value === "string" ? value : null);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
@@ -42,9 +56,9 @@ export default function CMSImageUpload({ label, value, onChange }) {
             justifyContent: "center",
           }}
         >
-          {value ? (
+          {previewSrc ? (
             <img
-              src={typeof value === "string" ? value : URL.createObjectURL(value)}
+              src={previewSrc}
               alt="Preview"
               style={{
                 width: "100%",
@@ -69,17 +83,14 @@ export default function CMSImageUpload({ label, value, onChange }) {
             style={{ display: "none" }}
           />
 
-          <CMSButton
-            variant="secondary"
-            onClick={() => fileInputRef.current?.click()}
-          >
+          <UploadButton onClick={() => fileInputRef.current?.click()}>
             Choose File
-          </CMSButton>
+          </UploadButton>
 
-          {value && (
-            <CMSButton variant="danger" onClick={handleRemove}>
-              Remove
-            </CMSButton>
+          {previewSrc && (
+            <DeleteButton onClick={handleRemove}>
+              Remove Image
+            </DeleteButton>
           )}
         </div>
       </div>
