@@ -2,14 +2,16 @@
 import { Navigate, useParams } from "react-router-dom";
 import { useAuth } from "@/app/providers/AuthProvider";
 import { useClub } from "@/app/providers/ClubProvider";
+import { useMembership } from "@/app/providers/MembershipProvider";
 
 export default function ProtectedAppRoute({ children }) {
-  const { session, membership, loadingUser } = useAuth();
+  const { session, loadingUser } = useAuth();
+  const { membership, loadingMembership } = useMembership();
   const { club, loadingClub } = useClub();
   const { clubSlug } = useParams();
 
   // Still loading → block until ready
-  if (loadingUser || loadingClub) {
+  if (loadingUser || loadingMembership || loadingClub) {
     return (
       <div style={{ padding: "24px", textAlign: "center" }}>
         Checking access…

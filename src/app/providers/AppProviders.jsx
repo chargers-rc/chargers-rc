@@ -1,6 +1,6 @@
 // src/app/providers/AppProviders.jsx
 
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "@/app/providers/AuthProvider";
 
 import ClubProvider from "@/app/providers/ClubProvider";
@@ -10,11 +10,7 @@ import DriverProvider from "@/app/providers/DriverProvider";
 import NumberProvider from "@/app/providers/NumberProvider";
 import NotificationProvider from "@/app/providers/NotificationProvider";
 
-function InnerAppProviders({ children }) {
-  const { user, loadingUser } = useAuth();
-
-  console.log("[InnerAppProviders]", { user, loadingUser });
-
+function AuthenticatedProviders({ children }) {
   return (
     <ClubProvider>
       <ProfileProvider>
@@ -22,13 +18,7 @@ function InnerAppProviders({ children }) {
           <DriverProvider>
             <NumberProvider>
               <NotificationProvider>
-                {loadingUser ? (
-                  <div style={{ padding: 40, fontSize: 24 }}>
-                    Loading user…
-                  </div>
-                ) : (
-                  children
-                )}
+                {children}
               </NotificationProvider>
             </NumberProvider>
           </DriverProvider>
@@ -39,9 +29,29 @@ function InnerAppProviders({ children }) {
 }
 
 export default function AppProviders() {
+  const { user, loadingUser } = useAuth();
+  const location = useLocation();
+
+  console.log("[AppProviders]", { user, loadingUser, path: location.pathname });
+
+  // ⭐ 1. Still loading session → show splash
+  if (loadingUser) {
+    return (
+      <div style={{ padding: 40, fontSize: 24 }}>
+        Checking session…
+      </div>
+    );
+  }
+
+  // ⭐ 2. User NOT logged in → render login OUTSIDE providers
+  if (!user) {
+    return <Outlet />;
+  }
+
+  // ⭐ 3. User logged in → wrap authenticated routes in providers
   return (
-    <InnerAppProviders>
+    <AuthenticatedProviders>
       <Outlet />
-    </InnerAppProviders>
+    </AuthenticatedProviders>
   );
 }

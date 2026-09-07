@@ -37,13 +37,8 @@ export default function DriverProvider({ children }) {
     if (inFlightRef.current) return;
     if (loadingUser || loadingMembership) return;
 
-    if (!user?.id) {
-      setDrivers([]);
-      setLoadingDrivers(false);
-      return;
-    }
-
-    if (!membership) {
+    // ⭐ FIX: membership may be null on first render
+    if (!user?.id || !membership) {
       setDrivers([]);
       setLoadingDrivers(false);
       return;
@@ -110,12 +105,10 @@ export default function DriverProvider({ children }) {
     membership?.club_id,
   ]);
 
-  // ⭐ UPDATED — DELETE DRIVER (convert club_members → member-only)
   const deleteDriver = useCallback(
     async (driverId) => {
       if (!driverId) return;
 
-      // 1. Delete driver
       const { error: driverError } = await supabase
         .from("drivers")
         .delete()
@@ -126,9 +119,6 @@ export default function DriverProvider({ children }) {
         throw driverError;
       }
 
-      // 2. Convert any linked club_members rows to "member-only"
-      //    - Keep first_name, last_name, is_junior as-is
-      //    - Only null out driver_id
       const { error: memberError } = await supabase
         .from("club_members")
         .update({ driver_id: null })
@@ -139,7 +129,6 @@ export default function DriverProvider({ children }) {
           "[DriverProvider] convert club_member to member-only error",
           memberError
         );
-        // Not fatal — driver is already deleted
       }
 
       await loadDrivers();
@@ -147,7 +136,6 @@ export default function DriverProvider({ children }) {
     [loadDrivers]
   );
 
-  // Load drivers when membership becomes available
   useEffect(() => {
     if (!loadingUser && !loadingMembership && membership) {
       loadDrivers();
@@ -161,7 +149,6 @@ export default function DriverProvider({ children }) {
     loadDrivers,
   ]);
 
-  // Realtime subscriptions
   useEffect(() => {
     if (loadingUser || loadingMembership || !membership) return;
 

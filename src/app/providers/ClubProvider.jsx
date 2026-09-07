@@ -15,6 +15,28 @@ export function useClub() {
   return useContext(ClubContext);
 }
 
+/**
+ * ✔ REQUIRED BY ClubSelect.jsx
+ * ✔ This export MUST exist
+ */
+export async function userBelongsToClub(userId, clubId) {
+  if (!userId || !clubId) return false;
+
+  const { data: membership, error } = await supabase
+    .from("household_memberships")
+    .select("id, status, membership_type")
+    .eq("club_id", clubId)
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (error) {
+    console.error("userBelongsToClub error:", error);
+    return false;
+  }
+
+  return !!membership;
+}
+
 export default function ClubProvider({ children }) {
   const location = useLocation();
   const { loadingUser } = useAuth();
