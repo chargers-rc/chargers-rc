@@ -21,7 +21,7 @@ export default function AuthProvider({ children }) {
   // Hydrate user fully before allowing CMS to render
   // ------------------------------------------------------------
   async function hydrateUser(newSession) {
-    if (!newSession?.user || !newSession.user.id) {
+    if (!newSession?.user?.id) {
       hydratingRef.current = false;
       setProfile(null);
       setMembership(null);
@@ -44,10 +44,7 @@ export default function AuthProvider({ children }) {
     if (!hydratingRef.current) return;
     setProfile(profileData || null);
 
-    const clubId =
-      meta.club_id ||
-      profileData?.club_id ||
-      null;
+    const clubId = meta.club_id || profileData?.club_id || null;
 
     // Load membership by user_id
     let { data: membershipData } = await supabase
@@ -88,7 +85,7 @@ export default function AuthProvider({ children }) {
         .from("household_memberships")
         .insert({
           user_id: userId,
-          email: email,
+          email,
           primary_first_name: meta.first_name || profileData?.first_name,
           primary_last_name: meta.last_name || profileData?.last_name,
           membership_type: "non_member",
@@ -120,7 +117,9 @@ export default function AuthProvider({ children }) {
       return;
     }
 
+    hydratingRef.current = true;
     await hydrateUser(newSession);
+    hydratingRef.current = false;
   }
 
   // ------------------------------------------------------------
@@ -141,7 +140,6 @@ export default function AuthProvider({ children }) {
         console.error(">>> AuthProvider init error", err);
       } finally {
         if (mounted) {
-          // ⭐ Only finish loading AFTER hydration completes
           setLoadingUser(false);
         }
       }
@@ -165,8 +163,6 @@ export default function AuthProvider({ children }) {
         }
 
         await handleSession(newSession);
-
-        // ⭐ Only finish loading AFTER hydration completes
         setLoadingUser(false);
       }
     );

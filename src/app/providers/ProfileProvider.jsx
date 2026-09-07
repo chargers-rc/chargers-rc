@@ -1,5 +1,6 @@
 // src/app/providers/ProfileProvider.jsx
-import { createContext, useContext, useEffect, useState } from "react";
+
+import { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { supabase } from "@/supabaseClient";
 import { useAuth } from "@/app/providers/AuthProvider";
 
@@ -20,12 +21,11 @@ export default function ProfileProvider({ children }) {
   const [profile, setProfile] = useState(null);
   const [loadingProfile, setLoadingProfile] = useState(true);
 
-  async function loadProfile() {
-    if (loadingUser) {
-      setLoadingProfile(true);
-      return;
-    }
+  const loadProfile = useCallback(async () => {
+    // Do NOT run while auth is still hydrating
+    if (loadingUser) return;
 
+    // No user → no profile
     if (!user?.id) {
       setProfile(null);
       setLoadingProfile(false);
@@ -50,60 +50,59 @@ export default function ProfileProvider({ children }) {
           ...data,
           email: user.email,
         });
-        setLoadingProfile(false);
-        return;
+      } else {
+        // Create profile if missing
+        const meta = user.user_metadata || {};
+
+        const firstName =
+          meta.first_name ||
+          meta.full_name?.split(" ")?.[0] ||
+          "";
+
+        const lastName =
+          meta.last_name ||
+          meta.full_name?.split(" ")?.slice(1).join(" ") ||
+          "";
+
+        const fullName =
+          meta.full_name ||
+          `${firstName} ${lastName}`.trim();
+
+        const { data: created, error: insertError } = await supabase
+          .from("profiles")
+          .insert({
+            id: user.id,
+            email: user.email,
+            first_name: firstName,
+            last_name: lastName,
+            full_name: fullName,
+          })
+          .select()
+          .single();
+
+        if (insertError) {
+          console.error("ProfileProvider INSERT error:", insertError);
+          setProfile(null);
+        } else {
+          setProfile({
+            ...created,
+            email: user.email,
+          });
+        }
       }
-
-      // Create profile if missing
-      const meta = user.user_metadata || {};
-
-      const firstName =
-        meta.first_name ||
-        meta.full_name?.split(" ")?.[0] ||
-        "";
-      const lastName =
-        meta.last_name ||
-        meta.full_name?.split(" ")?.slice(1).join(" ") ||
-        "";
-
-      const fullName =
-        meta.full_name ||
-        `${firstName} ${lastName}`.trim();
-
-      const { data: created, error: insertError } = await supabase
-        .from("profiles")
-        .insert({
-          id: user.id,
-          email: user.email,
-          first_name: firstName,
-          last_name: lastName,
-          full_name: fullName,
-        })
-        .select()
-        .single();
-
-      if (insertError) {
-        console.error("ProfileProvider INSERT error:", insertError);
-        setProfile(null);
-        setLoadingProfile(false);
-        return;
-      }
-
-      setProfile({
-        ...created,
-        email: user.email,
-      });
-      setLoadingProfile(false);
     } catch (err) {
       console.error("ProfileProvider loadProfile exception:", err);
       setProfile(null);
+    } finally {
       setLoadingProfile(false);
     }
-  }
+  }, [user?.id, loadingUser]);
 
   useEffect(() => {
-    loadProfile();
-  }, [user?.id, loadingUser]);
+    if (!loadingUser) {
+      loadProfile();
+    }
+  }, [loadingUser, user?.id, loadProfile]);
 
   return (
     <ProfileContext.Provider

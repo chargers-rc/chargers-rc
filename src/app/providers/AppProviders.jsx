@@ -15,30 +15,25 @@ function InnerAppProviders({ children }) {
 
   console.log("[InnerAppProviders]", { user, loadingUser });
 
-  // Allow rendering while loadingUser === true
-  if (loadingUser) {
-    return <div style={{ padding: 40, fontSize: 24 }}>Loading user…</div>;
-  }
-
-  // ⭐ ALWAYS mount ClubProvider — public routes REQUIRE club
   return (
     <ClubProvider>
-      {/* Profile + membership only when user exists */}
-      {user ? (
-        <ProfileProvider>
-          <MembershipProvider>
-            <DriverProvider>
-              <NumberProvider>
-                <NotificationProvider>
-                  {children}
-                </NotificationProvider>
-              </NumberProvider>
-            </DriverProvider>
-          </MembershipProvider>
-        </ProfileProvider>
-      ) : (
-        children
-      )}
+      <ProfileProvider>
+        <MembershipProvider>
+          <DriverProvider>
+            <NumberProvider>
+              <NotificationProvider>
+                {loadingUser ? (
+                  <div style={{ padding: 40, fontSize: 24 }}>
+                    Loading user…
+                  </div>
+                ) : (
+                  children
+                )}
+              </NotificationProvider>
+            </NumberProvider>
+          </DriverProvider>
+        </MembershipProvider>
+      </ProfileProvider>
     </ClubProvider>
   );
 }

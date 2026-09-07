@@ -34,10 +34,8 @@ export default function MembershipProvider({ children }) {
   const loadMembership = useCallback(async () => {
     if (inFlightRef.current) return;
 
-    if (loadingUser || !club?.id) {
-      setLoadingMembership(true);
-      return;
-    }
+    // If auth or club isn't ready, do NOT flip loadingMembership repeatedly
+    if (loadingUser || !club?.id) return;
 
     if (!user?.id) {
       setMembership(null);
@@ -49,7 +47,6 @@ export default function MembershipProvider({ children }) {
     setLoadingMembership(true);
 
     try {
-      // ⭐ FIXED: removed .eq("status", "active")
       const { data, error } = await supabase
         .from("household_memberships")
         .select("*")
@@ -63,7 +60,6 @@ export default function MembershipProvider({ children }) {
       } else {
         const row = data || null;
 
-        // ⭐ Clean binary membership model
         const isMember =
           row &&
           row.membership_type &&
@@ -81,6 +77,7 @@ export default function MembershipProvider({ children }) {
   }, [user?.id, loadingUser, club?.id]);
 
   useEffect(() => {
+    // Only run when ALL dependencies are ready
     if (!loadingUser && user?.id && club?.id) {
       loadMembership();
     }
